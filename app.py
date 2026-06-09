@@ -1,3 +1,4 @@
+```python
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -412,3 +413,240 @@ if secilen_senaryo == "Günlük Asistan & Problem Çözücü":
         if st.button("🔍 Kodu Analiz Et ve Düzelten Çözümü Üret") and hatali_kod:
             with st.spinner("Yapılan mantık ve yazılım hataları ayıklanıyor..."):
                 kod_prompt = f"Şu kodu: {hatali_kod} ve alınan şu hatayı: {hata_mesaji} inceleyip çözüm üret."
+                analiz_response = client.chat.completions.create(
+                    model="llama-3.1-8b-instant",
+                    messages=[
+                        {"role": "system", "content": "Sen kıdemli bir yazılım mühendisi ve kod hata ayıklama uzmanısın."},
+                        {"role": "user", "content": kod_prompt}
+                    ],
+                    temperature=0.2
+                )
+                st.markdown("#### 🟢 Yapay Zeka Çözüm Raporu")
+                st.write(analiz_response.choices[0].message.content)
+
+    sistem_talimati = "Sen kullanıcının analitik düşünen, zeki kişisel yapay zeka asistanı, yazılım uzmanı ve akıl hocasısın."
+    asistan_selamlama = "Merhaba! Günlük asistan ve mühendislik modülü aktif. Görevlerinizi sol panelden planlayabilir, hatalı kodlarınızı yukarıdaki analizöre bırakabilirsiniz. Bugün neyi çözelim?"
+
+# 2. FİNANSAL PERFORMANS MODÜLÜ
+elif secilen_senaryo == "Finansal Performans & Büyüme":
+    st.sidebar.markdown("---")
+    st.sidebar.subheader("📂 Finansal CSV Yükle")
+    uploaded_file = st.sidebar.file_uploader("Finansal Veri Setinizi Yükleyin (CSV)", type=["csv"])
+    
+    if uploaded_file is not None:
+        try: df = pd.read_csv(uploaded_file)
+        except: st.stop()
+    else:
+        df = pd.DataFrame({"Ay": ["Ocak", "Şubat", "Mart", "Nisan"], "Gelir (TL)": [120000, 140000, 135000, 160000], "Gider (TL)": [95000, 105000, 110000, 115000]})
+
+    df["Net Kar (TL)"] = df["Gelir (TL)"] - df["Gider (TL)"]
+    df["Kar Marjı (%)"] = round((df["Net Kar (TL)"] / df["Gelir (TL)"]) * 100, 2)
+    df_aktif_rapor_icin = df
+
+    st.write("### 📈 Aktif Finansal Veri Tablosu")
+    st.dataframe(df, use_container_width=True)
+
+    # ML Projeksiyon Hesaplamaları
+    v_boyut = len(df)
+    fit_gelir = np.polyfit(np.arange(v_boyut), df["Gelir (TL)"], 1)
+    fit_gider = np.polyfit(np.arange(v_boyut), df["Gider (TL)"], 1)
+    t_gelir = np.polyval(fit_gelir, np.array([v_boyut, v_boyut+1]))
+    t_gider = np.polyval(fit_gider, np.array([v_boyut, v_boyut+1]))
+    
+    m_aylar = list(df.iloc[:, 0])
+    t_aylar = m_aylar + [f"{m_aylar[-1]} +1 (T)", f"{m_aylar[-1]} +2 (T)"]
+    
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=t_aylar[:v_boyut], y=list(df["Gelir (TL)"]), name="Gerçekleşen Gelir", line=dict(color="#00f2ff", width=4)))
+    fig.add_trace(go.Scatter(x=t_aylar[:v_boyut], y=list(df["Gider (TL)"]), name="Gerçekleşen Gider", line=dict(color="#ef553b", width=4)))
+    fig.add_trace(go.Scatter(x=t_aylar[v_boyut-1:], y=[df["Gelir (TL)"].iloc[-1]] + list(t_gelir), name="Öngörülen Gelir (ML)", line=dict(color="#00f2ff", width=4, dash='dash')))
+    fig.add_trace(go.Scatter(x=t_aylar[v_boyut-1:], y=[df["Gider (TL)"].iloc[-1]] + list(t_gider), name="Öngörülen Gider (ML)", line=dict(color="#ef553b", width=4, dash='dash')))
+    fig.update_layout(title="🔮 Gelecek Projeksiyon Grafiği", template="plotly_dark", height=380)
+    st.plotly_chart(fig, use_container_width=True)
+
+    sistem_talimati = f"Sen uzman bir Finansal Analistsin. Mevcut gelir son ayda {df['Gelir (TL)'].iloc[-1]} TL. Gelecek projeksiyonlarına uygun aksiyon önerileri ver."
+    asistan_selamlama = "Finansal Modül Aktif. Stratejimizi planlayalım mı?"
+
+# 3. MEDİKAL TRİYAJ & KLİNİK SÜREÇ MODÜLÜ
+else:
+    st.info("🚨 Biyomedikal veri analizi, klinik süreç takibi ve acil triyaj optimizasyon paneli aktif.")
+    
+    # MEDİKAL VİTAL PARAMETRE PANELİ
+    st.sidebar.markdown("---")
+    st.sidebar.subheader("🏥 Canlı Hayati Bulgular")
+    nabiz_input = st.sidebar.number_input("Nabız (BPM - Kalp Hızı):", min_value=30, max_value=220, value=75)
+    sistolik_input = st.sidebar.number_input("Sistolik Kan Basıncı (Büyük Tansiyon):", min_value=50, max_value=250, value=120)
+    spo2_input = st.sidebar.number_input("Oksijen Satürasyonu (SpO2 %):", min_value=50, max_value=100, value=97)
+    ates_input = st.sidebar.number_input("Vücut Sıcaklığı (Ateş °C):", min_value=30.0, max_value=45.0, value=36.5, step=0.1)
+    
+    # EWS Hesabı
+    ews_skor = klinik_ews_skor_hesapla(nabiz_input, sistolik_input, spo2_input, ates_input)
+    
+    st.write("### 🛡️ Acil Servis Triyaj ve Klinik Süreç Öngörüsü")
+    
+    # Triyaj Görsel Gösterimi
+    c1, c2 = st.columns(2)
+    with c1:
+        if ews_skor >= 5:
+            st.error(f"🔴 Erken Uyarı Skoru (EWS): {ews_skor} - KIRMIZI ALAN (Yüksek Risk!)")
+            st.write("🩺 **ÖNERİ:** Hasta acil stabilizasyon odasına alınmalı, vital parametreler sürekli izlenmelidir.")
+            triyaj_renk = "Kırmızı"
+        elif 3 <= ews_skor < 5:
+            st.warning(f"🟡 Erken Uyarı Skoru (EWS): {ews_skor} - SARI ALAN (Orta Risk!)")
+            st.write("🩺 **ÖNERİ:** Hekim değerlendirmesi 30 dakika içinde yapılmalı, yakın takip başlatılmalıdır.")
+            triyaj_renk = "Sarı"
+        else:
+            st.success(f"🟢 Erken Uyarı Skoru (EWS): {ews_skor} - YEŞİL ALAN (Stabil durum)")
+            st.write("🩺 **ÖNERİ:** Rutin takip yeterlidir, ayakta veya stabil servis takibine uygundur.")
+            triyaj_renk = "Yeşil"
+            
+    with c2:
+        # Fizyolojik Sinyal EKG Çizdirme
+        st.write("🩺 **Biyomedikal Sinyal Takip Analizörü**")
+        t_vec, noisy_ecg, clean_ecg = simule_fizyolojik_sinyal()
+        fig_ecg = go.Figure()
+        fig_ecg.add_trace(go.Scatter(x=t_vec, y=noisy_ecg, name="Gürültülü EKG (50Hz)", line=dict(color="#ef553b", width=1.5)))
+        fig_ecg.add_trace(go.Scatter(x=t_vec, y=clean_ecg, name="Filtrelenmiş EKG", line=dict(color="#00cc96", width=2)))
+        fig_ecg.update_layout(template="plotly_dark", height=200, margin=dict(l=10, r=10, t=10, b=10))
+        st.plotly_chart(fig_ecg, use_container_width=True)
+
+    klinik_data = {
+        "Parametre": ["Kalp Hızı (Nabız)", "Sistolik Tansiyon", "Oksijen Satürasyonu (SpO2)", "Ateş Value", "Erken Uyarı Skoru"],
+        "Değer": [nabiz_input, sistolik_input, spo2_input, ates_input, ews_skor],
+        "Durum Sınıfı": [triyaj_renk] * 5
+    }
+    df_klinik = pd.DataFrame(klinik_data)
+    df_aktif_rapor_icin = df_klinik
+    
+    sistem_talimati = f"Sen bir Klinik Mühendislik ve Triyaj uzmanısın. Kullanıcının verdiği şu hayati verilere göre konuş: Nabız {nabiz_input}, Tansiyon {sistolik_input}, SpO2 {spo2_input}, Ateş {ates_input}. EWS Skoru: {ews_skor}."
+    asistan_selamlama = "🚨 Klinik Süreç Modülü Aktif. Darboğazları ve hasta durumlarını konuşalım mı?"
+
+# --- 📄 SİDEBAR: PDF RAPORU OLUŞTURMA BUTONU ---
+st.sidebar.markdown("---")
+st.sidebar.subheader("📄 Raporlama Katmanı")
+if st.sidebar.button("📊 Profesyonel PDF Raporu Üret"):
+    if len(st.session_state.messages) > 0:
+        with st.sidebar.spinner("PDF Raporu Derleniyor..."):
+            rapor_dosyasi = pdf_rapor_uret(secilen_senaryo, df_aktif_rapor_icin, st.session_state.messages)
+            
+            with open(rapor_dosyasi, "rb") as f:
+                st.sidebar.download_button(
+                    label="📥 PDF Raporunu Bilgisayarına İndir",
+                    data=f,
+                    file_name=f"{secilen_senaryo.replace(' ', '_')}_Raporu.pdf",
+                    mime="application/pdf"
+                )
+            st.sidebar.success("Rapor başarıyla hazırlandı!")
+    else:
+        st.sidebar.warning("Rapor oluşturabilmek için önce yapay zeka ile konuşup bir analiz yürütmelisiniz.")
+
+# Hafızayı Sıfırlama Butonu
+if st.sidebar.button("🗑️ Bu Modülün Hafızasını Sıfırla"):
+    tum_hafiza = hafiza_yukle()
+    if secilen_senaryo in tum_hafiza: del tum_hafiza[secilen_senaryo]
+    with open(HAFIZA_DOSYASI, "w", encoding="utf-8") as f: json.dump(tum_hafiza, f, ensure_ascii=False, indent=4)
+    st.session_state.messages = []
+    st.sidebar.success("Modül hafızası sıfırlandı!")
+    st.rerun()
+
+# --- ORTAK SOHBET ARAYÜZÜ ---
+if len(st.session_state.messages) == 0:
+    st.session_state.messages = [{"role": "assistant", "content": asistan_selamlama}]
+
+for msg in st.session_state.messages:
+    with st.chat_message(msg["role"]): st.write(msg["content"])
+
+# --- YENİ NESİL BORSA ANALİZ VE BACKTEST PANELİ ---
+st.sidebar.divider()
+st.sidebar.subheader("📈 Canlı Borsa Analiz Modülü")
+hisse_kod = st.sidebar.text_input("Hisse/Varlık Kodu (Örn: THYAO.IS, BTC-USD):", "")
+analiz_buton = st.sidebar.button("🤖 Yapay Zeka Analizini Başlat")
+
+if analiz_buton and hisse_kod:
+    with st.spinner(f"{hisse_kod} için veriler çekiliyor ve analiz ediliyor..."):
+        data = yf.download(hisse_kod, period="6mo", interval="1d")
+        
+        if not data.empty:
+            haber_skoru = analiz_haber_duygusu(hisse_kod, client)
+            ihtimal, basari_orani = hibrit_ai_motoru(data, haber_skoru)
+            yuzde = ihtimal * 100
+            
+            # --- YENİ NESİL GELİŞMİŞ ANALİZ ÇIKTILARI (METRİKLER) ---
+            saglik_skoru, temel_detaylar = temel_analiz_saglik_skoru(hisse_kod)
+            kasa_orani = kelly_pozisyon_boyutu(yuzde, basari_orani)
+            stop_seviyesi = teknik_atr_stop_loss(data)
+            
+            st.success(f"📊 {hisse_kod} için Kurumsal Analiz Raporu Tamamlandı!")
+            
+            # İlk Satır: Temel Metrikler
+            m1, m2, m3, m4 = st.columns(4)
+            m1.metric("AI Yükseliş Olasılığı", f"%{yuzde:.1f}")
+            m2.metric("Model Başarı Oranı", f"%{basari_orani*100:.1f}")
+            m3.metric("Haber Duygu Puanı", f"{haber_skoru:.2f}")
+            m4.metric("Güncel Fiyat", f"{float(data['Close'].iloc[-1]):.2f}")
+            
+            # İkinci Satır: Risk ve Temel Analiz Metrikleri
+            st.markdown("### 🛡️ Risk Yönetimi ve Şirket Sağlık Analizi")
+            r1, r2, r3 = st.columns(3)
+            r1.metric("Şirket Sağlık Skoru", f"{saglik_skoru}/10")
+            r2.metric("Kelly Kasa Yönetimi (Max Öneri)", f"%{kasa_orani:.1f}")
+            r3.metric("Matematiksel Stop-Loss (ATR)", f"{stop_seviyesi:.2f}" if stop_seviyesi else "Hesaplanamadı")
+            
+            # Bilanço Detayları
+            with st.expander("🔍 Şirket Sağlık Analizi Rapor Detayları"):
+                for detay in temel_detaylar:
+                    st.write(f"- {detay}")
+            
+            # Gelişmiş Strateji Mesajı
+            st.divider()
+            if yuzde > 60 and saglik_skoru >= 6:
+                st.write("🟢 **STRATEJİ: GÜÇLÜ AL** - Hem teknik/haber yapay zekası yukarı yönlü sinyal üretiyor hem de şirketin temel finansal sağlığı çok güçlü.")
+            elif yuzde < 40 or saglik_skoru <= 4:
+                st.write("🔴 **STRATEJİ: GÜÇLÜ SAT / UZAK DUR** - Yapay zeka düşüş bekliyor veya şirketin borçluluk/çarpan analizleri yüksek risk barındırıyor.")
+            else:
+                st.write("🟡 **STRATEJİ: BEKLE/TUT** - Net bir trend oluşmadı veya teknik göstergeler temel verilerle çelişiyor. İzlemede kalın.")
+                
+            st.divider()
+            
+            # Backtest Sonuçlarını Gösteriyoruz
+            bt = backtest_simulasyonu(data)
+            if bt:
+                st.subheader("📊 Strateji Geriye Dönük Test (Backtest) Sonuçları")
+                st.write("Son 6 aylık verilere göre bu yapay zeka stratejisi uygulansaydı:")
+                
+                b1, b2, b3 = st.columns(3)
+                b1.metric("Piyasa (Al-Tut) Getirisi", f"%{bt['Piyasa']:.1f}")
+                b2.metric("AI Strateji Getirisi", f"%{bt['Strateji']:.1f}")
+                b3.metric("Maksimum Risk (Drawdown)", f"%{bt['DD']:.1f}")
+        else:
+            st.error("Veri çekilemedi. Lütfen girdiğiniz kodun doğruluğunu kontrol edin (BIST hisseleri için sonuna .IS eklemeyi unutmayın).")
+
+# --- YAPAY ZEKA SOHBET GİRİŞ KUTUSU ---
+if user_input := st.chat_input("Asistanınıza mesajınızı yazın..."):
+    with st.chat_message("user"): st.write(user_input)
+    st.session_state.messages.append({"role": "user", "content": user_input})
+    
+    with st.chat_message("assistant"):
+        mesaj_alani = st.empty()
+        try:
+            llm_messages = [{"role": "system", "content": sistem_talimati}]
+            for m in st.session_state.messages[:-1]: llm_messages.append({"role": m["role"], "content": m["content"]})
+            llm_messages.append({"role": "user", "content": user_input})
+            
+            chat_response = client.chat.completions.create(model="llama-3.1-8b-instant", messages=llm_messages, temperature=0.4, stream=True)
+            
+            tam_cevap = ""
+            for chunk in chat_response:
+                if chunk.choices[0].delta.content is not None:
+                    tam_cevap += chunk.choices[0].delta.content
+                    mesaj_alani.markdown(tam_cevap + "▌")
+            
+            mesaj_alani.markdown(tam_cevap)
+            st.session_state.messages.append({"role": "assistant", "content": tam_cevap})
+            hafiza_kaydet(secilen_senaryo, st.session_state.messages)
+            
+        except Exception as e: 
+            st.error(f"Bağlantı hatası: {e}")
+
+
+```
