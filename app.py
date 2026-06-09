@@ -23,7 +23,8 @@ st.set_page_config(page_title="Karar Destek ve Raporlama Platformu 3.1", layout=
 HAFIZA_DOSYASI = "asistan_hafiza.json"
 
 # GROQ API BAĞLANTI AYARI
-GROQ_API_KEY = "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" 
+# GROQ API BAĞLANTI AYARI
+GROQ_API_KEY = st.secrets["GROQ_API_KEY"]
 client = Groq(api_key=GROQ_API_KEY)
 
 # --- YEREL HAFIZA FONKSİYONLARI ---
