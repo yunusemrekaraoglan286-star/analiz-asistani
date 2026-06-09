@@ -411,4 +411,4 @@ if secilen_senaryo == "Günlük Asistan & Problem Çözücü":
         
         if st.button("🔍 Kodu Analiz Et ve Düzelten Çözümü Üret") and hatali_kod:
             with st.spinner("Yapılan mantık ve yazılım hataları ayıklanıyor..."):
-                kod_prompt = f"Sana verilen şu hatalı kodu incele:\n
+                kod_prompt = f"Şu kodu: {hatali_kod} ve alınan şu hatayı: {hata_mesaji} inceleyip çözüm üret."
