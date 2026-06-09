@@ -1,3 +1,8 @@
+streamlit
+pandas
+numpy
 groq
 plotly
+scikit-learn
+yfinance
 reportlab
